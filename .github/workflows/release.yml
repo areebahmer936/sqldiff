@@ -66,7 +66,6 @@ jobs:
       # ── 5. Install npm deps ────────────────────────────────────────────────────
       - name: Install npm deps
         run: npm install
-        working-directory: compare-sql
 
       # ── 6. Build Tauri app ────────────────────────────────────────────────────
       - name: Build Tauri app
@@ -74,7 +73,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: compare-sql
           tagName: ${{ github.ref_name }}
           releaseName: CompareSQL ${{ github.ref_name }}
           releaseBody: |
