@@ -51,11 +51,6 @@ export function ConnectionPanel({
     }
   };
 
-  const getSelectedConnectionName = (id: string) => {
-    const conn = savedConnections.find(c => c.id === id);
-    return conn?.name || 'Select a database...';
-  };
-
   return (
     <div className="connection-panel">
       <div className="connection-header">
@@ -76,13 +71,18 @@ export function ConnectionPanel({
             <span className="label-icon">📤</span> Source Database
           </label>
           <div className="connection-select-wrapper">
-            <div 
-              className={`connection-display ${selectedSourceId ? 'has-value' : ''}`}
-              onClick={() => setShowManageModal(true)}
+            <select
+              className="connection-select"
+              value={selectedSourceId}
+              onChange={(e) => handleSelectConnection(e.target.value, 'source')}
             >
-              {getSelectedConnectionName(selectedSourceId)}
-              <span className="dropdown-arrow">▼</span>
-            </div>
+              <option value="">Select a database...</option>
+              {savedConnections.map((conn) => (
+                <option key={conn.id} value={conn.id}>
+                  {conn.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -92,13 +92,18 @@ export function ConnectionPanel({
             <span className="label-icon">📥</span> Target Database
           </label>
           <div className="connection-select-wrapper">
-            <div 
-              className={`connection-display ${selectedTargetId ? 'has-value' : ''}`}
-              onClick={() => setShowManageModal(true)}
+            <select
+              className="connection-select"
+              value={selectedTargetId}
+              onChange={(e) => handleSelectConnection(e.target.value, 'target')}
             >
-              {getSelectedConnectionName(selectedTargetId)}
-              <span className="dropdown-arrow">▼</span>
-            </div>
+              <option value="">Select a database...</option>
+              {savedConnections.map((conn) => (
+                <option key={conn.id} value={conn.id}>
+                  {conn.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

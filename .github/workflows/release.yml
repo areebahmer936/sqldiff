@@ -37,7 +37,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: compare-sql/package-lock.json
+          cache-dependency-path: package-lock.json
 
       # ── 3. Rust ───────────────────────────────────────────────────────────────
       - name: Setup Rust
@@ -48,7 +48,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: compare-sql/src-tauri -> target
+          workspaces: src-tauri -> target
 
       # ── 4. Linux system dependencies ──────────────────────────────────────────
       - name: Install Linux dependencies
