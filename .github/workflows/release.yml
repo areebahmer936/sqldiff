@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # triggers on v1.0.0, v1.2.3, etc.
+
+jobs:
+  release:
+    permissions:
+      contents: write   # needed to create GitHub releases
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            label: linux
+            rust-target: x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            label: windows
+            rust-target: x86_64-pc-windows-msvc
+          - platform: macos-latest
+            label: macos
+            rust-target: aarch64-apple-darwin   # Apple Silicon; add x86_64-apple-darwin for Intel
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js ────────────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: compare-sql/package-lock.json
+
+      # ── 3. Rust ───────────────────────────────────────────────────────────────
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: compare-sql/src-tauri -> target
+
+      # ── 4. Linux system dependencies ──────────────────────────────────────────
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
+      # ── 5. Install npm deps ────────────────────────────────────────────────────
+      - name: Install npm deps
+        run: npm install
+        working-directory: compare-sql
+
+      # ── 6. Build Tauri app ────────────────────────────────────────────────────
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: compare-sql
+          tagName: ${{ github.ref_name }}
+          releaseName: CompareSQL ${{ github.ref_name }}
+          releaseBody: |
+            ## CompareSQL ${{ github.ref_name }}
+
+            ### Downloads
+            | Platform | File |
+            |---|---|
+            | Linux | `.deb` or `.AppImage` |
+            | Windows | `.msi` or `.exe` |
+            | macOS | `.dmg` |
+
+            ### What's new
+            See the commit history for changes in this release.
+
+            ### Features
+            - Compare database schemas (Tables, Stored Procedures, Functions)
+            - Support for MSSQL Server (MySQL and SQLite coming soon)
+            - Git-style diff viewer
+            - Dark theme UI
+          releaseDraft: false
+          prerelease: false
